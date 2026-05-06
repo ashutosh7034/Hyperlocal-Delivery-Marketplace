@@ -1,4 +1,4 @@
-const { CustomerProfile, User, CustomerAddress } = require('../models');
+const { CustomerProfile, User, CustomerAddress, Order, OrderItem, VendorProfile, Product } = require('../models');
 const { geocodeAddress } = require('../services/googleMaps');
 
 /**
@@ -47,6 +47,45 @@ const getAddresses = async (req, res) => {
     res.json({
       success: true,
       data: addresses,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+/**
+ * Get customer orders
+ */
+const getCustomerOrders = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const orders = await Order.findAll({
+      where: { customer_id: userId },
+      include: [
+        { model: VendorProfile, as: 'vendor' },
+        { model: CustomerAddress, as: 'deliveryAddress' },
+        {
+          model: OrderItem,
+          as: 'items',
+          include: [
+            {
+              model: Product,
+              as: 'product',
+              attributes: ['id', 'name', 'image_url'],
+            },
+          ],
+        },
+      ],
+      order: [['created_at', 'DESC']],
+    });
+
+    res.json({
+      success: true,
+      data: orders,
     });
   } catch (error) {
     res.status(500).json({
@@ -256,6 +295,7 @@ const deleteAddress = async (req, res) => {
 module.exports = {
   getCustomerProfile,
   getAddresses,
+  getCustomerOrders,
   addAddress,
   updateAddress,
   deleteAddress,

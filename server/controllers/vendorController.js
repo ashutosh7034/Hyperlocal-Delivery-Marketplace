@@ -1,4 +1,11 @@
-const { VendorProfile, User, Product, CustomerProfile, Order } = require('../models');
+const {
+  VendorProfile,
+  User,
+  Product,
+  CustomerAddress,
+  Order,
+  OrderItem,
+} = require('../models');
 const { geocodeAddress, haversineDistance } = require('../services/googleMaps');
 const { Op, sequelize } = require('sequelize');
 
@@ -179,16 +186,6 @@ const getNearbyVendors = async (req, res) => {
   try {
     const { lat, lng, radius = 30 } = req.query;
 
-    if (!lat || !lng) {
-      return res.status(400).json({
-        success: false,
-        message: 'Latitude and longitude are required',
-      });
-    }
-
-    const customerLat = parseFloat(lat);
-    const customerLng = parseFloat(lng);
-
     // Fetch all approved active vendors
     const vendors = await VendorProfile.findAll({
       where: {
@@ -208,6 +205,21 @@ const getNearbyVendors = async (req, res) => {
         },
       ],
     });
+
+    if (!lat || !lng) {
+      return res.json({
+        success: true,
+        data: vendors.map((vendor) => ({
+          ...vendor.toJSON(),
+          distance_km: null,
+          isDeliverable: true,
+        })),
+        count: vendors.length,
+      });
+    }
+
+    const customerLat = parseFloat(lat);
+    const customerLng = parseFloat(lng);
 
     // Calculate distance for each vendor using Haversine formula
     const vendorsWithDistance = vendors
@@ -257,26 +269,35 @@ const getVendorOrders = async (req, res) => {
       });
     }
 
-    const query = {
-      where: { vendor_id: vendor.id },
+    const orders = await Order.findAll({
+      where: {
+        vendor_id: vendor.id,
+        ...(status ? { order_status: status } : {}),
+      },
       include: [
         {
-          model: CustomerProfile,
+          model: User,
           as: 'customer',
-          include: [{ model: User, as: 'user' }],
+          attributes: ['id', 'name', 'email'],
         },
         {
-          model: Order,
-          as: 'orders',
+          model: CustomerAddress,
+          as: 'deliveryAddress',
+        },
+        {
+          model: OrderItem,
+          as: 'items',
+          include: [
+            {
+              model: Product,
+              as: 'product',
+              attributes: ['id', 'name', 'price', 'image_url'],
+            },
+          ],
         },
       ],
-    };
-
-    if (status) {
-      query.where.order_status = status;
-    }
-
-    const orders = await Order.findAll(query);
+      order: [['created_at', 'DESC']],
+    });
 
     res.json({
       success: true,

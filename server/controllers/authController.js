@@ -58,6 +58,12 @@ const register = async (req, res) => {
       verification_token: verificationToken,
     });
 
+    if (process.env.NODE_ENV !== 'production') {
+      user.verified = true;
+      user.verification_token = null;
+      await user.save();
+    }
+
     // Create customer profile if registering as customer
     if (role === 'customer') {
       await CustomerProfile.create({
@@ -65,12 +71,14 @@ const register = async (req, res) => {
       });
     }
 
-    // Send verification email
-    try {
-      await sendVerificationEmail(user.email, verificationToken, role);
-    } catch (emailError) {
-      console.error('Email sending error:', emailError);
-      // Continue with registration even if email fails
+    // Send verification email in production; local development users are auto-verified.
+    if (process.env.NODE_ENV === 'production') {
+      try {
+        await sendVerificationEmail(user.email, verificationToken, role);
+      } catch (emailError) {
+        console.error('Email sending error:', emailError);
+        // Continue with registration even if email fails
+      }
     }
 
     res.status(201).json({

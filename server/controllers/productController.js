@@ -35,6 +35,41 @@ const getProductsByVendor = async (req, res) => {
 };
 
 /**
+ * Get products for the authenticated vendor
+ */
+const getMyProducts = async (req, res) => {
+  try {
+    const vendor = await VendorProfile.findOne({
+      where: { user_id: req.user.id },
+    });
+
+    if (!vendor) {
+      return res.status(404).json({
+        success: false,
+        message: 'Vendor profile not found',
+      });
+    }
+
+    const products = await Product.findAll({
+      where: {
+        vendor_id: vendor.id,
+      },
+      order: [['created_at', 'DESC']],
+    });
+
+    res.json({
+      success: true,
+      data: products,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+/**
  * Create product (vendor)
  */
 const createProduct = async (req, res) => {
@@ -243,6 +278,7 @@ const deleteProduct = async (req, res) => {
 
 module.exports = {
   getProductsByVendor,
+  getMyProducts,
   createProduct,
   updateProduct,
   deleteProduct,

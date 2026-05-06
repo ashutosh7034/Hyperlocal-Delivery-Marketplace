@@ -206,7 +206,7 @@ const getDashboardStats = async (req, res) => {
 
     // Calculate total revenue (sum of all delivered orders)
     const { sum: totalRevenue } = await Order.findOne({
-      attributes: [['total_amount', 'sum']],
+      attributes: [[require('sequelize').fn('sum', require('sequelize').col('total_amount')), 'sum']],
       where: { order_status: 'delivered' },
       raw: true,
     });
@@ -225,7 +225,7 @@ const getDashboardStats = async (req, res) => {
     const topVendors = await Order.findAll({
       attributes: [
         'vendor_id',
-        [require('sequelize').fn('count', require('sequelize').col('id')), 'order_count'],
+        [require('sequelize').fn('count', require('sequelize').col('Order.id')), 'order_count'],
       ],
       include: [
         {
@@ -234,7 +234,7 @@ const getDashboardStats = async (req, res) => {
           attributes: ['id', 'shop_name'],
         },
       ],
-      group: 'vendor_id',
+      group: ['Order.vendor_id', 'vendor.id'],
       order: [[require('sequelize').literal('order_count'), 'DESC']],
       limit: 5,
       raw: true,

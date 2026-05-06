@@ -1,6 +1,7 @@
 const express = require('express');
 const {
   getProductsByVendor,
+  getMyProducts,
   createProduct,
   updateProduct,
   deleteProduct,
@@ -12,6 +13,9 @@ const router = express.Router();
 
 // Public endpoint to get products by vendor
 router.get('/', getProductsByVendor);
+
+// Vendor dashboard endpoint
+router.get('/my-products', verifyToken, requireRole(['vendor']), getMyProducts);
 
 // Vendor-only endpoints
 router.post(

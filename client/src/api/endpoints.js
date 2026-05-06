@@ -34,6 +34,30 @@ export const productAPI = {
   create: (data) => apiInstance.post('/products', data),
   update: (productId, data) => apiInstance.put(`/products/${productId}`, data),
   delete: (productId) => apiInstance.delete(`/products/${productId}`),
+  getMyProducts: () => apiInstance.get('/products/my-products'),
+  getNearbyVendors: () => apiInstance.get('/vendors/nearby'),
+};
+
+/**
+ * Customer API calls
+ */
+export const customerAPI = {
+  getProfile: () => apiInstance.get('/customers/profile'),
+  updateProfile: (data) => apiInstance.put('/customers/profile', data),
+  getOrders: () => apiInstance.get('/customers/orders'),
+  getAddresses: () => apiInstance.get('/customers/addresses'),
+  addAddress: (data) => apiInstance.post('/customers/addresses', data),
+};
+
+/**
+ * Admin API calls
+ */
+export const adminAPI = {
+  getStats: () => apiInstance.get('/admin/stats'),
+  getVendors: () => apiInstance.get('/admin/vendors'),
+  approveVendor: (vendorId) => apiInstance.put(`/admin/vendors/${vendorId}/approve`),
+  rejectVendor: (vendorId, reason) => apiInstance.put(`/admin/vendors/${vendorId}/reject`, { reason }),
+  getOrders: () => apiInstance.get('/admin/orders'),
 };
 
 /**
@@ -54,10 +78,14 @@ export const orderAPI = {
   getOrderDetails: (orderId) => apiInstance.get(`/orders/${orderId}`),
 };
 
-export default {
+const endpoints = {
   auth: authAPI,
   vendor: vendorAPI,
   product: productAPI,
+  customer: customerAPI,
+  admin: adminAPI,
   cart: cartAPI,
   order: orderAPI,
 };
+
+export default endpoints;
