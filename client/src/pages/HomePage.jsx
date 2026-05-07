@@ -1,102 +1,275 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Card } from '../components/BaseComponents';
+import { motion, useAnimation } from 'framer-motion';
+import { MapPin, Clock, Star, TrendingUp, Search, ShieldCheck, ChevronRight, Activity } from 'lucide-react';
+import { Card, Button, Input } from '../components/BaseComponents';
 
 const stats = [
-  { value: '2k+', label: 'local stores ready to list' },
-  { value: '30 min', label: 'delivery promise for core zones' },
-  { value: '3 roles', label: 'customer, vendor, admin' },
+  { value: '2k+', label: 'Local Stores' },
+  { value: '15 Min', label: 'Avg Delivery' },
+  { value: '99%', label: 'On-time Rate' },
 ];
 
-const features = [
-  {
-    title: 'Find nearby vendors',
-    description: 'Surface shops by location, delivery radius, and product fit instead of showing a generic catalog.',
-  },
-  {
-    title: 'Manage inventory',
-    description: 'Vendors can create products, update stock, and track orders from one place.',
-  },
-  {
-    title: 'Approve and govern',
-    description: 'Admins can review vendors, monitor orders, and keep the marketplace healthy.',
-  },
+const trendingVendors = [
+  { name: 'Fresh Mart', category: 'Groceries', distance: '1.2 km', rating: 4.8, image: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=400' },
+  { name: 'Spicy Kitchen', category: 'Restaurant', distance: '0.8 km', rating: 4.9, image: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&q=80&w=400' },
+  { name: 'Daily Essentials', category: 'Convenience', distance: '2.4 km', rating: 4.6, image: 'https://images.unsplash.com/photo-1604719312566-8912e9227c6a?auto=format&fit=crop&q=80&w=400' },
+  { name: 'Green Pharmacy', category: 'Medicines', distance: '1.5 km', rating: 4.7, image: 'https://images.unsplash.com/photo-1587854692152-cbe660dbde88?auto=format&fit=crop&q=80&w=400' },
 ];
 
 const HomePage = () => {
   return (
-    <div className="surface-grid">
-      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
-        <div className="grid gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
-          <div>
-            <span className="inline-flex rounded-full border border-primary/15 bg-primary/10 px-4 py-2 text-sm font-semibold text-primary">
-              Hyperlocal commerce for India
-            </span>
-            <h1 className="mt-6 max-w-3xl text-4xl font-black tracking-tight text-slate-950 sm:text-5xl lg:text-6xl">
-              Deliver from the nearest store, not the largest catalog.
-            </h1>
-            <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600">
-              HyperLocal India is the marketplace shell for discovering nearby vendors, placing fast local orders,
-              and managing the full delivery lifecycle across customers, vendors, and admins.
-            </p>
+    <div className="bg-slate-50 dark:bg-dark-bg min-h-screen">
+      {/* Hero Section */}
+      <section className="relative overflow-hidden pt-20 pb-24 lg:pt-32 lg:pb-40">
+        {/* Background Gradients */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[600px] bg-gradient-to-b from-primary/10 to-transparent dark:from-primary/5 blur-3xl -z-10" />
+        <div className="absolute top-40 -left-40 w-96 h-96 bg-accent/20 rounded-full blur-3xl -z-10 mix-blend-multiply dark:mix-blend-lighten" />
+        <div className="absolute top-20 -right-40 w-96 h-96 bg-primary/20 rounded-full blur-3xl -z-10 mix-blend-multiply dark:mix-blend-lighten" />
 
-            <div className="mt-8 flex flex-wrap gap-4">
-              <Link to="/contact" className="rounded-full bg-primary px-6 py-3 font-semibold text-white shadow-lg shadow-primary/20 hover:bg-orange-600">
-                Get started
-              </Link>
-              <Link to="/about" className="rounded-full border border-slate-300 bg-white px-6 py-3 font-semibold text-slate-700 hover:border-primary hover:text-primary">
-                Learn more
-              </Link>
-            </div>
-
-            <div className="mt-12 grid gap-4 sm:grid-cols-3">
-              {stats.map((stat) => (
-                <Card key={stat.label} className="border border-white/70 bg-white/85 backdrop-blur">
-                  <p className="text-2xl font-black text-slate-950">{stat.value}</p>
-                  <p className="mt-1 text-sm text-slate-600">{stat.label}</p>
-                </Card>
-              ))}
-            </div>
-          </div>
-
-          <div className="relative">
-            <div className="absolute -left-6 top-10 h-32 w-32 rounded-full bg-primary/20 blur-3xl" />
-            <div className="absolute right-8 top-0 h-40 w-40 rounded-full bg-secondary/20 blur-3xl" />
-            <Card className="relative overflow-hidden border border-white/80 bg-slate-950 p-0 text-white shadow-2xl">
-              <div className="border-b border-white/10 px-6 py-5">
-                <p className="text-sm font-medium text-slate-300">Live marketplace preview</p>
-                <p className="mt-1 text-2xl font-bold">Nearby essentials</p>
+        <div className="container relative z-10">
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-8 items-center">
+            {/* Left Content */}
+            <motion.div 
+              initial={{ opacity: 0, x: -50 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, ease: "easeOut" }}
+              className="max-w-2xl"
+            >
+              <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-2 text-sm font-semibold text-primary mb-6">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+                </span>
+                Lightning fast local delivery
               </div>
-              <div className="space-y-4 px-6 py-6">
-                {[
-                  ['Fresh Mart', '1.2 km away', 'Groceries, dairy, and staples'],
-                  ['Quick Pharmacy', '0.8 km away', 'Medicines and wellness essentials'],
-                  ['Daily Bites', '2.4 km away', 'Meals, snacks, and beverages'],
-                ].map(([name, distance, detail]) => (
-                  <div key={name} className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <p className="font-semibold text-white">{name}</p>
-                        <p className="mt-1 text-sm text-slate-300">{detail}</p>
-                      </div>
-                      <span className="rounded-full bg-accent/20 px-3 py-1 text-xs font-semibold text-accent">{distance}</span>
-                    </div>
-                  </div>
+              <h1 className="text-5xl lg:text-7xl font-black tracking-tight text-slate-900 dark:text-white leading-[1.1] mb-6">
+                Craving it? <br/>
+                <span className="text-gradient">We deliver it.</span>
+              </h1>
+              <p className="text-lg text-slate-600 dark:text-slate-300 mb-10 max-w-lg leading-relaxed">
+                From fresh groceries to your favorite local restaurant meals, get everything delivered to your doorstep in minutes.
+              </p>
+
+              {/* Location Input */}
+              <div className="bg-white dark:bg-slate-900 p-2 rounded-2xl shadow-xl shadow-primary/10 border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row gap-2">
+                <div className="relative flex-1 flex items-center">
+                  <MapPin className="absolute left-4 text-primary" size={20} />
+                  <input 
+                    type="text" 
+                    placeholder="Enter your delivery address" 
+                    className="w-full bg-transparent border-none focus:ring-0 pl-12 pr-4 py-3 text-slate-900 dark:text-white placeholder:text-slate-400 outline-none"
+                  />
+                </div>
+                <Button variant="primary" size="lg" className="w-full sm:w-auto shadow-none">
+                  Search
+                </Button>
+              </div>
+
+              {/* Stats */}
+              <div className="mt-12 grid grid-cols-3 gap-6 pt-8 border-t border-slate-200 dark:border-slate-800">
+                {stats.map((stat, idx) => (
+                  <motion.div 
+                    key={stat.label}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4 + (idx * 0.1) }}
+                  >
+                    <p className="text-3xl font-black text-slate-900 dark:text-white">{stat.value}</p>
+                    <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mt-1">{stat.label}</p>
+                  </motion.div>
                 ))}
               </div>
-            </Card>
+            </motion.div>
+
+            {/* Right Content - Floating UI Elements */}
+            <div className="relative lg:h-[600px] hidden md:block">
+              {/* Main Image */}
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.8 }}
+                className="absolute right-0 top-1/2 -translate-y-1/2 w-[450px] h-[550px] rounded-[3rem] overflow-hidden shadow-2xl border-4 border-white dark:border-slate-800 z-10"
+              >
+                <img 
+                  src="https://images.unsplash.com/photo-1526367790999-0150786686a2?auto=format&fit=crop&q=80&w=800" 
+                  alt="Delivery package" 
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent" />
+              </motion.div>
+
+              {/* Floating Tracking Card */}
+              <motion.div 
+                animate={{ y: [0, -15, 0] }}
+                transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+                className="absolute top-24 -left-12 z-20"
+              >
+                <Card className="p-4 w-64 glass-card dark:glass-card flex items-center gap-4">
+                  <div className="h-12 w-12 rounded-full bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                    <Activity size={24} />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Live Tracking</p>
+                    <p className="text-sm font-bold text-slate-900 dark:text-white">Arriving in 12 min</p>
+                  </div>
+                </Card>
+              </motion.div>
+
+              {/* Floating Review Card */}
+              <motion.div 
+                animate={{ y: [0, 15, 0] }}
+                transition={{ repeat: Infinity, duration: 5, ease: "easeInOut", delay: 1 }}
+                className="absolute bottom-32 -left-4 z-20"
+              >
+                <Card className="p-4 w-72 glass-card dark:glass-card">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="flex text-amber-400">
+                      {[1,2,3,4,5].map(i => <Star key={i} size={16} fill="currentColor" />)}
+                    </div>
+                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300">5.0</span>
+                  </div>
+                  <p className="text-sm font-medium text-slate-900 dark:text-white italic">
+                    "Fastest delivery I've ever experienced! The food was still piping hot."
+                  </p>
+                </Card>
+              </motion.div>
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
-        <div className="grid gap-6 md:grid-cols-3">
-          {features.map((feature) => (
-            <Card key={feature.title} className="border border-slate-200/80 bg-white/90">
-              <p className="text-lg font-bold text-slate-950">{feature.title}</p>
-              <p className="mt-3 text-sm leading-6 text-slate-600">{feature.description}</p>
-            </Card>
-          ))}
+      {/* Trending Vendors Section */}
+      <section className="py-20 bg-white dark:bg-slate-900">
+        <div className="container">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-10">
+            <div>
+              <div className="flex items-center gap-2 text-primary mb-2">
+                <TrendingUp size={20} />
+                <span className="font-bold text-sm uppercase tracking-wider">Trending</span>
+              </div>
+              <h2 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white">
+                Popular near you
+              </h2>
+            </div>
+            <Link to="/vendors" className="hidden md:flex items-center gap-1 font-semibold text-primary hover:text-orange-600 transition group mt-4 md:mt-0">
+              Explore all 
+              <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {trendingVendors.map((vendor, idx) => (
+              <motion.div
+                key={vendor.name}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-100px" }}
+                transition={{ duration: 0.5, delay: idx * 0.1 }}
+              >
+                <Link to="/vendors">
+                  <Card hover={true} className="h-full p-0 flex flex-col group cursor-pointer border-none shadow-md hover:shadow-xl dark:bg-slate-800">
+                    <div className="relative h-48 overflow-hidden">
+                      <img 
+                        src={vendor.image} 
+                        alt={vendor.name} 
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                      />
+                      <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm dark:bg-slate-900/90 px-2 py-1 rounded-md flex items-center gap-1 shadow-sm">
+                        <Star size={14} className="text-amber-500" fill="currentColor" />
+                        <span className="text-xs font-bold text-slate-900 dark:text-white">{vendor.rating}</span>
+                      </div>
+                    </div>
+                    <div className="p-5 flex-1 flex flex-col">
+                      <h3 className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors">{vendor.name}</h3>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">{vendor.category}</p>
+                      
+                      <div className="mt-auto flex items-center justify-between text-sm font-medium pt-4 border-t border-slate-100 dark:border-slate-700">
+                        <div className="flex items-center gap-1 text-slate-600 dark:text-slate-300">
+                          <MapPin size={16} className="text-primary" />
+                          {vendor.distance}
+                        </div>
+                        <div className="flex items-center gap-1 text-slate-600 dark:text-slate-300">
+                          <Clock size={16} className="text-emerald-500" />
+                          10-15 min
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+                </Link>
+              </motion.div>
+            ))}
+          </div>
+          
+          <div className="mt-8 text-center md:hidden">
+            <Button variant="outline" className="w-full">Explore all stores</Button>
+          </div>
+        </div>
+      </section>
+
+      {/* How it works */}
+      <section className="py-24 bg-slate-50 dark:bg-dark-bg">
+        <div className="container">
+          <div className="text-center max-w-2xl mx-auto mb-16">
+            <h2 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white mb-4">
+              Lightning fast delivery, guaranteed.
+            </h2>
+            <p className="text-slate-600 dark:text-slate-400 text-lg">
+              We've optimized every step of the process to get your order to you as quickly and securely as possible.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8 relative">
+            {/* Connecting Line */}
+            <div className="hidden md:block absolute top-1/2 left-[10%] right-[10%] h-0.5 bg-gradient-to-r from-primary/10 via-primary to-primary/10 -translate-y-1/2 z-0" />
+
+            {[
+              { icon: Search, title: "Discover", desc: "Find the best local stores and restaurants near you." },
+              { icon: Clock, title: "Order", desc: "Place your order easily and track it in real-time." },
+              { icon: ShieldCheck, title: "Receive", desc: "Get it delivered safely to your doorstep." }
+            ].map((step, i) => (
+              <motion.div 
+                key={step.title}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.2 }}
+                className="relative z-10 flex flex-col items-center text-center"
+              >
+                <div className="w-20 h-20 rounded-2xl bg-white dark:bg-slate-800 shadow-xl shadow-primary/10 border border-slate-100 dark:border-slate-700 flex items-center justify-center mb-6 text-primary">
+                  <step.icon size={32} />
+                </div>
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">{step.title}</h3>
+                <p className="text-slate-600 dark:text-slate-400 px-4">{step.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+      
+      {/* CTA Section */}
+      <section className="py-20">
+        <div className="container">
+          <div className="bg-slate-900 dark:bg-slate-800 rounded-3xl p-8 md:p-16 text-center relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 rounded-full blur-3xl -z-10" />
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-accent/20 rounded-full blur-3xl -z-10" />
+            
+            <h2 className="text-3xl md:text-5xl font-black text-white mb-6 relative z-10">
+              Ready to experience the future <br className="hidden md:block"/> of local delivery?
+            </h2>
+            <div className="flex flex-col sm:flex-row justify-center gap-4 relative z-10">
+              <Link to="/register">
+                <Button variant="primary" size="lg" className="w-full sm:w-auto text-lg px-8">
+                  Get Started Now
+                </Button>
+              </Link>
+              <Link to="/vendors">
+                <Button variant="outline" size="lg" className="w-full sm:w-auto text-lg border-slate-700 text-slate-300 hover:border-slate-500 hover:text-white dark:text-slate-300">
+                  Browse Stores
+                </Button>
+              </Link>
+            </div>
+          </div>
         </div>
       </section>
     </div>
