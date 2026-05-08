@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Card, Button } from '../components/BaseComponents';
-import { Map, Clock, DollarSign, ShieldCheck } from 'lucide-react';
+import { Clock, DollarSign, ShieldCheck } from 'lucide-react';
 
 const RiderAppPage = () => {
   return (

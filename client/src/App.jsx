@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { LocationProvider } from './context/LocationContext';
 import { CartProvider } from './context/CartContext';
@@ -22,6 +22,7 @@ import VendorOrdersPage from './pages/VendorOrdersPage';
 import AdminVendorsPage from './pages/AdminVendorsPage';
 import AdminOrdersPage from './pages/AdminOrdersPage';
 import NotFoundPage from './pages/NotFoundPage';
+import AuthCallbackPage from './pages/AuthCallbackPage';
 
 // New Pages
 import CareersPage from './pages/CareersPage';
@@ -29,8 +30,20 @@ import RiderAppPage from './pages/RiderAppPage';
 import TermsPage from './pages/TermsPage';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 import FindStoresPage from './pages/FindStoresPage';
+import { useAuth } from './hooks/useAuth';
 
 import './index.css';
+
+const RequireAuth = ({ children }) => {
+  const location = useLocation();
+  const { isAuthenticated } = useAuth();
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace state={{ from: location }} />;
+  }
+
+  return children;
+};
 
 /**
  * Main App Component
@@ -52,13 +65,15 @@ function App() {
                     <Route path="/contact" element={<ContactPage />} />
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/register" element={<RegisterPage />} />
+                    <Route path="/auth/callback" element={<AuthCallbackPage />} />
                     <Route path="/profile" element={<ProfilePage />} />
                     <Route path="/dashboard" element={<CustomerDashboard />} />
+                    <Route path="/customer/dashboard" element={<CustomerDashboard />} />
                     <Route path="/vendor/dashboard" element={<VendorDashboard />} />
                     <Route path="/admin/dashboard" element={<AdminDashboard />} />
                     <Route path="/verify-email" element={<HomePage />} />
                     <Route path="/vendors" element={<BrowseVendorsPage />} />
-                    <Route path="/vendor/:vendorId" element={<VendorDetailPage />} />
+                    <Route path="/vendor/:vendorId" element={<RequireAuth><VendorDetailPage /></RequireAuth>} />
                     <Route path="/cart" element={<HomePage />} />
                     <Route path="/orders" element={<OrdersPage />} />
                     <Route path="/vendor/products" element={<VendorProductsPage />} />

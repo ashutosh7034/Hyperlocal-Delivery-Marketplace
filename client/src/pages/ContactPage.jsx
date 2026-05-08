@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Mail, Phone, MapPin, Clock, ArrowRight } from 'lucide-react';
-import { Button, Input } from '../components/BaseComponents';
+import { Button } from '../components/BaseComponents';
 
 const ContactPage = () => {
   const staggerContainer = {
@@ -71,7 +71,7 @@ const ContactPage = () => {
                   </div>
                   <div>
                     <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-1">Phone</h3>
-                    <p className="text-slate-600 dark:text-slate-400">+91 90000 00000</p>
+                    <p className="text-slate-600 dark:text-slate-400">+91 22 4000 9000</p>
                   </div>
                 </motion.div>
 
@@ -81,7 +81,7 @@ const ContactPage = () => {
                   </div>
                   <div>
                     <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-1">Office</h3>
-                    <p className="text-slate-600 dark:text-slate-400">123 Market Street, Koramangala<br/>Bangalore, India 560034</p>
+                    <p className="text-slate-600 dark:text-slate-400">123 Marine Drive, Churchgate<br/>Mumbai, Maharashtra 400020</p>
                   </div>
                 </motion.div>
 

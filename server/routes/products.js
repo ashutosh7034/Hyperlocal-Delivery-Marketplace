@@ -11,8 +11,8 @@ const upload = require('../middleware/upload');
 
 const router = express.Router();
 
-// Public endpoint to get products by vendor
-router.get('/', getProductsByVendor);
+// Store products require a logged-in user.
+router.get('/', verifyToken, getProductsByVendor);
 
 // Vendor dashboard endpoint
 router.get('/my-products', verifyToken, requireRole(['vendor']), getMyProducts);

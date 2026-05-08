@@ -15,6 +15,7 @@ const router = express.Router();
 router.get('/profile', verifyToken, requireRole(['customer']), getCustomerProfile);
 router.get('/addresses', verifyToken, requireRole(['customer']), getAddresses);
 router.get('/orders', verifyToken, requireRole(['customer']), getCustomerOrders);
+router.post('/orders', verifyToken, requireRole(['customer']), require('../controllers/customerController').createOrder);
 router.post('/addresses', verifyToken, requireRole(['customer']), addAddress);
 router.put('/addresses/:addressId', verifyToken, requireRole(['customer']), updateAddress);
 router.delete('/addresses/:addressId', verifyToken, requireRole(['customer']), deleteAddress);

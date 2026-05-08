@@ -19,11 +19,11 @@ const VendorProfile = sequelize.define(
       allowNull: false,
     },
     gstin: {
-      type: DataTypes.STRING(15),
+      type: DataTypes.STRING(20),
       allowNull: true,
     },
     phone: {
-      type: DataTypes.STRING(15),
+      type: DataTypes.STRING(20),
       allowNull: true,
     },
     address: {

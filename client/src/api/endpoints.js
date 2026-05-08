@@ -8,6 +8,8 @@ export const authAPI = {
   login: (data) => apiInstance.post('/auth/login', data),
   verifyEmail: (token) => apiInstance.get(`/auth/verify/${token}`),
   getCurrentUser: () => apiInstance.get('/auth/current-user'),
+  google: (credential) => apiInstance.post('/auth/google', { credential }),
+  facebook: (accessToken) => apiInstance.post('/auth/facebook', { accessToken }),
 };
 
 /**
@@ -15,6 +17,7 @@ export const authAPI = {
  */
 export const vendorAPI = {
   register: (data) => apiInstance.post('/vendors/register', data),
+  getById: (vendorId) => apiInstance.get(`/vendors/${vendorId}`),
   getProfile: () => apiInstance.get('/vendors/profile'),
   updateProfile: (data) => apiInstance.put('/vendors/profile', data),
   getNearbyVendors: (lat, lng, radius) =>
@@ -47,6 +50,7 @@ export const customerAPI = {
   getOrders: () => apiInstance.get('/customers/orders'),
   getAddresses: () => apiInstance.get('/customers/addresses'),
   addAddress: (data) => apiInstance.post('/customers/addresses', data),
+  createOrder: (data) => apiInstance.post('/customers/orders', data),
 };
 
 /**

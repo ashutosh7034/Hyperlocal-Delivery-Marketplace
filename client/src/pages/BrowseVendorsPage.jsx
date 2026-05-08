@@ -4,14 +4,8 @@ import { Card, Button, LoadingSpinner, ErrorAlert } from '../components/BaseComp
 import { vendorAPI } from '../api/endpoints';
 import { motion } from 'framer-motion';
 import { Search, MapPin, Star, Store, Filter, Clock, ChevronRight } from 'lucide-react';
-
-const VENDOR_IMAGES = [
-  "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=800",
-  "https://images.unsplash.com/photo-1604719312566-8912e9227c6a?auto=format&fit=crop&q=80&w=800",
-  "https://images.unsplash.com/photo-1578916171728-46686eac8d58?auto=format&fit=crop&q=80&w=800",
-  "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&q=80&w=800",
-  "https://images.unsplash.com/photo-1608686207856-001b95cf60ca?auto=format&fit=crop&q=80&w=800",
-];
+import { getVendorImage } from '../utils/imageHelpers';
+import SafeImage from '../components/SafeImage';
 
 const BrowseVendorsPage = () => {
   const navigate = useNavigate();
@@ -114,8 +108,9 @@ const BrowseVendorsPage = () => {
               >
                 <Card className="h-full p-0 overflow-hidden border-transparent shadow-lg hover:shadow-xl transition-all duration-300 dark:bg-slate-900">
                   <div className="relative h-48 overflow-hidden bg-slate-200 dark:bg-slate-800">
-                    <img 
-                      src={VENDOR_IMAGES[index % VENDOR_IMAGES.length]} 
+                    <SafeImage
+                      src={vendor.logo_url || getVendorImage(vendor.shop_name, vendor.category, index)}
+                      fallback={getVendorImage(vendor.shop_name, vendor.category, index + 1)}
                       alt={vendor.shop_name}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                     />

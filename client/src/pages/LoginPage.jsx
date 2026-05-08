@@ -1,17 +1,25 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { authAPI } from '../api/endpoints';
 import { Button, Card, Input, ErrorAlert } from '../components/BaseComponents';
+import SocialLogin from '../components/SocialLogin';
 import { motion } from 'framer-motion';
 import { Mail, Lock, ArrowRight, Home } from 'lucide-react';
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth();
   const [formData, setFormData] = useState({ email: 'customer@demo.com', password: 'Demo@1234' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const errParam = params.get('error');
+    if (errParam) setError(errParam);
+  }, [location.search]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -27,7 +35,15 @@ const LoginPage = () => {
       const response = await authAPI.login(formData);
       const { token, user } = response.data.data;
       login(token, user);
-      navigate('/', { replace: true });
+      const requestedPath = location.state?.from?.pathname;
+      const dashboardPath =
+        user.role === 'admin'
+          ? '/admin/dashboard'
+          : user.role === 'vendor'
+          ? '/vendor/dashboard'
+          : '/customer/dashboard';
+
+      navigate(requestedPath || dashboardPath, { replace: true });
     } catch (loginError) {
       const message = loginError.response?.data?.message || 'Unable to sign in right now.';
       setError(message);
@@ -99,9 +115,13 @@ const LoginPage = () => {
                 </div>
 
                 <div className="text-sm">
-                  <a href="#" className="font-semibold text-primary hover:text-orange-600">
+                  <button
+                    type="button"
+                    className="font-semibold text-primary hover:text-orange-600"
+                    onClick={() => navigate('/contact')}
+                  >
                     Forgot password?
-                  </a>
+                  </button>
                 </div>
               </div>
 
@@ -110,6 +130,8 @@ const LoginPage = () => {
                 {!loading && <ArrowRight size={18} className="ml-2" />}
               </Button>
             </form>
+
+            <SocialLogin onError={setError} />
 
             <p className="mt-8 text-center text-sm text-slate-600 dark:text-slate-400">
               Don't have an account?{' '}

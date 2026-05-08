@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Card, Button } from '../components/BaseComponents';
-import { Briefcase, Heart, Zap, Globe } from 'lucide-react';
+import { Heart, Globe } from 'lucide-react';
 
 const CareersPage = () => {
   return (

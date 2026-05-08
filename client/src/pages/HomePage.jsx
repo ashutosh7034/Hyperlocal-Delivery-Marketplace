@@ -1,23 +1,89 @@
-import React, { useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { motion, useAnimation } from 'framer-motion';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { MapPin, Clock, Star, TrendingUp, Search, ShieldCheck, ChevronRight, Activity } from 'lucide-react';
-import { Card, Button, Input } from '../components/BaseComponents';
+import { Card, Button } from '../components/BaseComponents';
+import SafeImage from '../components/SafeImage';
+import { vendorAPI } from '../api/endpoints';
+import { useLocation as useCustomerLocation } from '../hooks/useLocation';
+import { useAuth } from '../hooks/useAuth';
 
-const stats = [
-  { value: '2k+', label: 'Local Stores' },
-  { value: '15 Min', label: 'Avg Delivery' },
-  { value: '99%', label: 'On-time Rate' },
-];
-
-const trendingVendors = [
-  { name: 'Fresh Mart', category: 'Groceries', distance: '1.2 km', rating: 4.8, image: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=400' },
-  { name: 'Spicy Kitchen', category: 'Restaurant', distance: '0.8 km', rating: 4.9, image: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&q=80&w=400' },
-  { name: 'Daily Essentials', category: 'Convenience', distance: '2.4 km', rating: 4.6, image: 'https://images.unsplash.com/photo-1604719312566-8912e9227c6a?auto=format&fit=crop&q=80&w=400' },
-  { name: 'Green Pharmacy', category: 'Medicines', distance: '1.5 km', rating: 4.7, image: 'https://images.unsplash.com/photo-1587854692152-cbe660dbde88?auto=format&fit=crop&q=80&w=400' },
+const FALLBACK_IMAGES = [
+  'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=400',
+  'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&q=80&w=400',
+  'https://images.unsplash.com/photo-1604719312566-8912e9227c6a?auto=format&fit=crop&q=80&w=400',
+  'https://images.unsplash.com/photo-1587854692152-cbe660dbde88?auto=format&fit=crop&q=80&w=400',
 ];
 
 const HomePage = () => {
+  const navigate = useNavigate();
+  const { updateLocationByAddress } = useCustomerLocation();
+  const { isAuthenticated } = useAuth();
+  const [deliveryAddress, setDeliveryAddress] = useState('');
+  const [vendors, setVendors] = useState([]);
+  const [loadingVendors, setLoadingVendors] = useState(true);
+  const [searchingLocation, setSearchingLocation] = useState(false);
+
+  useEffect(() => {
+    const loadVendors = async () => {
+      try {
+        setLoadingVendors(true);
+        const response = await vendorAPI.getNearbyVendors();
+
+        setVendors(response.data.data || []);
+      } catch (error) {
+        setVendors([]);
+      } finally {
+        setLoadingVendors(false);
+      }
+    };
+
+    loadVendors();
+  }, []);
+
+  const stats = useMemo(() => {
+    const cities = new Set(vendors.map((vendor) => vendor.city).filter(Boolean));
+    const avgRadius = vendors.length
+      ? vendors.reduce((sum, vendor) => sum + Number(vendor.delivery_radius_km || 0), 0) / vendors.length
+      : 0;
+
+    return [
+      { value: `${vendors.length || 0}+`, label: 'Local Stores' },
+      { value: `${cities.size || 0}`, label: 'Cities Covered' },
+      { value: `${avgRadius ? avgRadius.toFixed(1) : '0'} km`, label: 'Avg Delivery Radius' },
+    ];
+  }, [vendors]);
+
+  const trendingVendors = useMemo(() => {
+    return vendors.slice(0, 4).map((vendor, index) => ({
+      id: vendor.id,
+      name: vendor.shop_name,
+      category: vendor.category || 'Local Store',
+      distance: vendor.distance_km != null ? `${Number(vendor.distance_km).toFixed(1)} km` : `${vendor.city || 'Nearby'}`,
+      rating: vendor.approval_status === 'approved' ? 4.8 : 4.5,
+      image: vendor.logo_url || FALLBACK_IMAGES[index % FALLBACK_IMAGES.length],
+    }));
+  }, [vendors]);
+
+  const handleLocationSearch = async (event) => {
+    event.preventDefault();
+
+    if (!deliveryAddress.trim()) {
+      navigate('/vendors');
+      return;
+    }
+
+    try {
+      setSearchingLocation(true);
+      await updateLocationByAddress(deliveryAddress.trim());
+      navigate('/vendors');
+    } catch (error) {
+      navigate('/vendors');
+    } finally {
+      setSearchingLocation(false);
+    }
+  };
+
   return (
     <div className="bg-slate-50 dark:bg-dark-bg min-h-screen">
       {/* Hero Section */}
@@ -52,19 +118,21 @@ const HomePage = () => {
               </p>
 
               {/* Location Input */}
-              <div className="bg-white dark:bg-slate-900 p-2 rounded-2xl shadow-xl shadow-primary/10 border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row gap-2">
+              <form onSubmit={handleLocationSearch} className="bg-white dark:bg-slate-900 p-2 rounded-2xl shadow-xl shadow-primary/10 border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row gap-2">
                 <div className="relative flex-1 flex items-center">
                   <MapPin className="absolute left-4 text-primary" size={20} />
                   <input 
                     type="text" 
                     placeholder="Enter your delivery address" 
+                    value={deliveryAddress}
+                    onChange={(event) => setDeliveryAddress(event.target.value)}
                     className="w-full bg-transparent border-none focus:ring-0 pl-12 pr-4 py-3 text-slate-900 dark:text-white placeholder:text-slate-400 outline-none"
                   />
                 </div>
-                <Button variant="primary" size="lg" className="w-full sm:w-auto shadow-none">
-                  Search
+                <Button type="submit" variant="primary" size="lg" className="w-full sm:w-auto shadow-none">
+                  {searchingLocation ? 'Searching...' : 'Search'}
                 </Button>
-              </div>
+              </form>
 
               {/* Stats */}
               <div className="mt-12 grid grid-cols-3 gap-6 pt-8 border-t border-slate-200 dark:border-slate-800">
@@ -80,6 +148,11 @@ const HomePage = () => {
                   </motion.div>
                 ))}
               </div>
+              <p className="mt-4 text-sm font-medium text-slate-500 dark:text-slate-400">
+                {loadingVendors
+                  ? 'Loading nearby stores...'
+                  : `Showing ${vendors.length} live stores near you.`}
+              </p>
             </motion.div>
 
             {/* Right Content - Floating UI Elements */}
@@ -167,12 +240,13 @@ const HomePage = () => {
                 viewport={{ once: true, margin: "-100px" }}
                 transition={{ duration: 0.5, delay: idx * 0.1 }}
               >
-                <Link to="/vendors">
+                <Link to={isAuthenticated ? `/vendor/${vendor.id}` : '/login'}>
                   <Card hover={true} className="h-full p-0 flex flex-col group cursor-pointer border-none shadow-md hover:shadow-xl dark:bg-slate-800">
                     <div className="relative h-48 overflow-hidden">
-                      <img 
-                        src={vendor.image} 
-                        alt={vendor.name} 
+                      <SafeImage
+                        src={vendor.image}
+                        fallback={FALLBACK_IMAGES[idx % FALLBACK_IMAGES.length]}
+                        alt={vendor.name}
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                       />
                       <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm dark:bg-slate-900/90 px-2 py-1 rounded-md flex items-center gap-1 shadow-sm">

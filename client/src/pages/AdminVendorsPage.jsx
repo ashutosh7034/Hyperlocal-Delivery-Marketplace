@@ -85,10 +85,19 @@ const AdminVendorsPage = () => {
                   <tr key={vendor.id}>
                     <td className="px-4 py-3">
                       <p className="font-semibold text-slate-950">{vendor.shop_name}</p>
-                      <p className="text-xs text-slate-500">{vendor.category || 'No category'}</p>
+                      <p className="text-xs text-slate-500">
+                        {vendor.category || 'No category'}
+                        {vendor.phone ? ` • ${vendor.phone}` : ''}
+                      </p>
                     </td>
-                    <td className="px-4 py-3">{vendor.user?.name || 'Unknown'}</td>
-                    <td className="px-4 py-3">{vendor.city}, {vendor.state}</td>
+                    <td className="px-4 py-3">
+                      <p className="font-medium text-slate-900">{vendor.user?.name || 'Unknown'}</p>
+                      <p className="text-xs text-slate-500">{vendor.user?.email || 'No email'}</p>
+                    </td>
+                    <td className="px-4 py-3">
+                      <p className="text-slate-900">{vendor.city}, {vendor.state}</p>
+                      <p className="text-xs text-slate-500">{vendor.address}</p>
+                    </td>
                     <td className="px-4 py-3">
                       <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold capitalize text-slate-700">
                         {vendor.approval_status}

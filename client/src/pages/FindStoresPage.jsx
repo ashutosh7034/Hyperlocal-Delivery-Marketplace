@@ -3,8 +3,11 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, MapPin, Star, Clock, Navigation, LocateFixed, ShoppingCart, Utensils, Pill, Store, ArrowUpDown } from 'lucide-react';
+import { Search, MapPin, Clock, Navigation, LocateFixed, ShoppingCart, Utensils, Pill, Store, ArrowUpDown } from 'lucide-react';
 import { Card, Button } from '../components/BaseComponents';
+import { vendorAPI } from '../api/endpoints';
+import { getVendorImage } from '../utils/imageHelpers';
+import SafeImage from '../components/SafeImage';
 
 // Fix Leaflet marker icon issue in React
 delete L.Icon.Default.prototype._getIconUrl;
@@ -13,14 +16,6 @@ L.Icon.Default.mergeOptions({
   iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
-
-// Mock vendor data with expanded fields
-const INITIAL_VENDORS = [
-  { id: 1, name: 'Fresh Mart Grocery', category: 'Groceries', rating: 4.8, distance: 1.2, lat: 12.9716, lng: 77.5946, img: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=400', coverImg: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=800', deliveryTime: '15-20 min', isOpen: true },
-  { id: 2, name: 'Spicy Kitchen', category: 'Restaurant', rating: 4.9, distance: 0.8, lat: 12.9756, lng: 77.5906, img: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=400', coverImg: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800', deliveryTime: '30-40 min', isOpen: true },
-  { id: 3, name: 'Green Pharmacy', category: 'Medicines', rating: 4.7, distance: 2.1, lat: 12.9696, lng: 77.6016, img: 'https://images.unsplash.com/photo-1587854692152-cbe660dbde88?w=400', coverImg: 'https://images.unsplash.com/photo-1587854692152-cbe660dbde88?w=800', deliveryTime: '10-15 min', isOpen: false },
-  { id: 4, name: 'Daily Essentials', category: 'Convenience', rating: 4.5, distance: 1.5, lat: 12.9786, lng: 77.5846, img: 'https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=400', coverImg: 'https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=800', deliveryTime: '5-10 min', isOpen: true },
-];
 
 const CATEGORIES = [
   { name: 'All', icon: Store },
@@ -64,18 +59,6 @@ function ChangeMapView({ coords, zoom }) {
   return null;
 }
 
-// Haversine distance calculator
-const calculateDistance = (lat1, lon1, lat2, lon2) => {
-  const R = 6371; // Radius of the earth in km
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLon = (lon2 - lon1) * Math.PI / 180;
-  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-            Math.sin(dLon/2) * Math.sin(dLon/2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-  return (R * c).toFixed(1); // Distance in km
-};
-
 // Skeleton Loader Component
 const StoreSkeleton = () => (
   <div className="p-3 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 animate-pulse">
@@ -96,25 +79,46 @@ const FindStoresPage = () => {
   const [sortBy, setSortBy] = useState('Recommended');
   const [activeVendorId, setActiveVendorId] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [userLocation, setUserLocation] = useState(null);
-  const [vendors, setVendors] = useState(INITIAL_VENDORS);
+  // Initialize with Mumbai default coordinates so vendors load immediately
+  const [userLocation, setUserLocation] = useState([19.0760, 72.8777]);
+  const [vendors, setVendors] = useState([]);
   
-  // Default center (Bangalore)
-  const defaultCenter = [12.9716, 77.5946];
+  // Default center (Mumbai)
+  const defaultCenter = [19.0760, 72.8777];
   const [mapCenter, setMapCenter] = useState(defaultCenter);
   const [mapZoom, setMapZoom] = useState(14);
   
   const listRef = useRef(null);
   const cardRefs = useRef({});
 
-  // Simulate network delay for skeletons
   useEffect(() => {
-    setIsLoading(true);
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 600);
-    return () => clearTimeout(timer);
-  }, [searchTerm, selectedCategory, sortBy]);
+    const loadVendors = async () => {
+      try {
+        setIsLoading(true);
+        const response = userLocation
+          ? await vendorAPI.getNearbyVendors(userLocation[0], userLocation[1], 30)
+          : await vendorAPI.getNearbyVendors();
+
+        const nextVendors = (response.data.data || []).map((vendor, index) => ({
+          ...vendor,
+          name: vendor.shop_name,
+          distance: vendor.distance_km != null ? Number(vendor.distance_km) : null,
+          img: vendor.logo_url || getVendorImage(vendor.shop_name, vendor.category, index),
+          coverImg: vendor.logo_url || getVendorImage(vendor.shop_name, vendor.category, index + 1),
+          deliveryTime: `${Math.max(10, Math.round(Number(vendor.delivery_radius_km || 5) * 3))}-${Math.max(15, Math.round(Number(vendor.delivery_radius_km || 5) * 4))} min`,
+          isOpen: vendor.approval_status !== 'rejected',
+        }));
+
+        setVendors(nextVendors);
+      } catch (error) {
+        setVendors([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadVendors();
+  }, [userLocation]);
 
   // Handle User Location
   const handleLocateMe = () => {
@@ -127,14 +131,6 @@ const FindStoresPage = () => {
           setUserLocation(newLocation);
           setMapCenter(newLocation);
           setMapZoom(15);
-          
-          // Recalculate distances for mock vendors
-          const updatedVendors = INITIAL_VENDORS.map(v => ({
-            ...v,
-            distance: parseFloat(calculateDistance(latitude, longitude, v.lat, v.lng))
-          }));
-          setVendors(updatedVendors);
-          setIsLoading(false);
         },
         (error) => {
           console.error("Error getting location", error);
@@ -149,16 +145,15 @@ const FindStoresPage = () => {
 
   const filteredAndSortedVendors = useMemo(() => {
     let result = vendors.filter(vendor => {
-      const matchesSearch = vendor.name.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesSearch = vendor.name?.toLowerCase().includes(searchTerm.toLowerCase()) || vendor.category?.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesCategory = selectedCategory === 'All' || vendor.category === selectedCategory;
       return matchesSearch && matchesCategory;
     });
 
     if (sortBy === 'Distance') {
-      result = result.sort((a, b) => a.distance - b.distance);
+      result = result.sort((a, b) => (a.distance ?? Number.POSITIVE_INFINITY) - (b.distance ?? Number.POSITIVE_INFINITY));
     } else {
-      // Default recommended sorting (highest rating first)
-      result = result.sort((a, b) => b.rating - a.rating);
+      result = result.sort((a, b) => a.name.localeCompare(b.name));
     }
 
     return result;
@@ -285,7 +280,7 @@ const FindStoresPage = () => {
                     }`}>
                       <div className="flex gap-4">
                         <div className="relative w-24 h-24 rounded-xl overflow-hidden shrink-0 shadow-sm">
-                          <img src={vendor.img} alt={vendor.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                          <SafeImage src={vendor.img} fallback={getVendorImage(vendor.name, vendor.category, idx)} alt={vendor.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                           {!vendor.isOpen && (
                             <div className="absolute inset-0 bg-black/60 flex items-center justify-center backdrop-blur-[2px]">
                               <span className="text-white text-[10px] font-bold uppercase tracking-wider px-2 py-1 border border-white/30 rounded">Closed</span>
@@ -296,15 +291,15 @@ const FindStoresPage = () => {
                           <div>
                             <div className="flex justify-between items-start mb-1">
                               <h3 className="font-bold text-slate-900 dark:text-white truncate text-base pr-2">{vendor.name}</h3>
-                              <div className="flex items-center gap-1 text-xs font-bold bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-1.5 py-0.5 rounded shadow-sm shrink-0">
-                                <Star size={10} fill="currentColor" /> {vendor.rating}
+                              <div className="flex items-center gap-1 text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-1.5 py-0.5 rounded shadow-sm shrink-0 capitalize">
+                                {vendor.approval_status}
                               </div>
                             </div>
                             <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-2">{vendor.category}</p>
                           </div>
                           
                           <div className="flex items-center gap-4 text-xs font-semibold text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/50 p-2 rounded-lg">
-                            <span className="flex items-center gap-1.5"><Navigation size={12} className="text-primary"/> {vendor.distance} km</span>
+                            <span className="flex items-center gap-1.5"><Navigation size={12} className="text-primary"/> {vendor.distance != null ? `${vendor.distance.toFixed(1)} km` : 'Nearby'}</span>
                             <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600"></span>
                             <span className="flex items-center gap-1.5"><Clock size={12} className="text-amber-500"/> {vendor.deliveryTime}</span>
                           </div>
@@ -350,7 +345,7 @@ const FindStoresPage = () => {
             {filteredAndSortedVendors.map(vendor => (
               <Marker 
                 key={vendor.id} 
-                position={[vendor.lat, vendor.lng]}
+                position={[Number(vendor.lat), Number(vendor.lng)]}
                 icon={createCustomIcon(vendor.category, activeVendorId === vendor.id)}
                 eventHandlers={{
                   click: () => handleVendorSelect(vendor),
@@ -359,7 +354,7 @@ const FindStoresPage = () => {
                 <Popup className="premium-popup" closeButton={false} offset={[0, -20]}>
                   <div className="w-[240px] bg-white dark:bg-slate-900 rounded-xl overflow-hidden shadow-2xl border border-slate-100 dark:border-slate-800">
                     <div className="relative h-28">
-                      <img src={vendor.coverImg} alt={vendor.name} className="w-full h-full object-cover" />
+                      <SafeImage src={vendor.coverImg} fallback={getVendorImage(vendor.name, vendor.category)} alt={vendor.name} className="w-full h-full object-cover" />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
                       {!vendor.isOpen && (
                         <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-md text-white text-[10px] font-bold uppercase tracking-wider px-2 py-1 border border-white/20 rounded">
@@ -374,13 +369,13 @@ const FindStoresPage = () => {
                     <div className="p-3">
                       <div className="flex items-center justify-between mb-3 text-xs font-semibold">
                         <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
-                          <Navigation size={12} className="text-primary"/> {vendor.distance} km
+                          <Navigation size={12} className="text-primary"/> {vendor.distance != null ? `${vendor.distance.toFixed(1)} km` : 'Nearby'}
                         </div>
                         <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
                           <Clock size={12} className="text-amber-500"/> {vendor.deliveryTime}
                         </div>
-                        <div className="flex items-center gap-1 text-green-700 dark:text-green-400 bg-green-100 dark:bg-green-900/30 px-1.5 py-0.5 rounded">
-                          <Star size={10} fill="currentColor" /> {vendor.rating}
+                        <div className="flex items-center gap-1 text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded capitalize">
+                          {vendor.approval_status}
                         </div>
                       </div>
                       <Button size="sm" variant="primary" className="w-full text-xs py-2 shadow-md hover:shadow-lg transition-shadow">

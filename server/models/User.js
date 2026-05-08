@@ -21,7 +21,7 @@ const User = sequelize.define(
     },
     password: {
       type: DataTypes.STRING(255),
-      allowNull: false,
+      allowNull: true,
     },
     role: {
       type: DataTypes.ENUM('admin', 'vendor', 'customer'),
@@ -41,6 +41,19 @@ const User = sequelize.define(
     },
     password_reset_token: {
       type: DataTypes.STRING(255),
+      allowNull: true,
+    },
+    provider: {
+      type: DataTypes.ENUM('local', 'google', 'facebook', 'github'),
+      defaultValue: 'local',
+      allowNull: false,
+    },
+    provider_id: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },
+    avatar_url: {
+      type: DataTypes.STRING(500),
       allowNull: true,
     },
   },

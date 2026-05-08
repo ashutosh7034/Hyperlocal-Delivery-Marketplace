@@ -7,6 +7,7 @@ const Cart = require('./Cart');
 const CartItem = require('./CartItem');
 const Order = require('./Order');
 const OrderItem = require('./OrderItem');
+const Invoice = require('./Invoice');
 
 User.hasOne(VendorProfile, { foreignKey: 'user_id', as: 'vendorProfile' });
 VendorProfile.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
@@ -40,6 +41,10 @@ OrderItem.belongsTo(Order, { foreignKey: 'order_id', as: 'order' });
 Product.hasMany(OrderItem, { foreignKey: 'product_id', as: 'orderItems' });
 OrderItem.belongsTo(Product, { foreignKey: 'product_id', as: 'product' });
 
+// Invoice association
+Order.hasOne(Invoice, { foreignKey: 'order_id', as: 'invoice' });
+Invoice.belongsTo(Order, { foreignKey: 'order_id', as: 'order' });
+
 module.exports = {
   User,
   VendorProfile,
@@ -50,4 +55,5 @@ module.exports = {
   CartItem,
   Order,
   OrderItem,
+  Invoice,
 };

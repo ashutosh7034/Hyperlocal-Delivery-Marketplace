@@ -95,9 +95,7 @@ const registerVendor = async (req, res) => {
       });
     }
 
-    // Create vendor profile
-    const vendor = await VendorProfile.create({
-      user_id: req.user.id,
+    const vendorValues = {
       shop_name,
       gstin,
       phone,
@@ -112,7 +110,18 @@ const registerVendor = async (req, res) => {
       min_order_amount: min_order_amount || 200,
       category,
       approval_status: 'pending',
+    };
+
+    const existingVendor = await VendorProfile.findOne({
+      where: { user_id: req.user.id },
     });
+
+    const vendor = existingVendor
+      ? await existingVendor.update(vendorValues)
+      : await VendorProfile.create({
+          user_id: req.user.id,
+          ...vendorValues,
+        });
 
     res.status(201).json({
       success: true,
@@ -251,6 +260,51 @@ const getNearbyVendors = async (req, res) => {
 };
 
 /**
+ * Get a single vendor by id
+ */
+const getVendorById = async (req, res) => {
+  try {
+    const { vendorId } = req.params;
+
+    const vendor = await VendorProfile.findOne({
+      where: {
+        id: vendorId,
+        approval_status: 'approved',
+      },
+      include: [
+        {
+          model: User,
+          as: 'user',
+          attributes: ['id', 'name', 'email', 'verified'],
+        },
+        {
+          model: Product,
+          as: 'products',
+          attributes: ['id', 'name', 'description', 'price', 'mrp', 'unit', 'stock', 'category', 'image_url', 'is_available'],
+        },
+      ],
+    });
+
+    if (!vendor) {
+      return res.status(404).json({
+        success: false,
+        message: 'Vendor not found',
+      });
+    }
+
+    res.json({
+      success: true,
+      data: vendor,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+/**
  * Get vendor's orders
  */
 const getVendorOrders = async (req, res) => {
@@ -367,6 +421,7 @@ module.exports = {
   registerVendor,
   updateVendorProfile,
   getNearbyVendors,
+  getVendorById,
   getVendorOrders,
   updateOrderStatus,
 };

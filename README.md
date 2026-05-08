@@ -265,7 +265,80 @@ Admin:     GET /api/admin/vendors, PUT /api/admin/vendors/:id/approve, etc
 
    Frontend will run on `http://localhost:3000`
 
-## 📍 Hyperlocal Feature: How It Works
+## � Environment Variables
+
+### Backend Environment Variables (`server/.env`)
+
+| Variable | Required | Purpose | Where to Get |
+|----------|----------|---------|--------------|
+| `PORT` | Optional | Server port (default: 5000) | Use 5000 for development |
+| `NODE_ENV` | Optional | Environment mode (development/production) | Set to `development` for dev |
+| `DB_DIALECT` | ✅ Required | Database type | Must be `mysql` |
+| `DB_HOST` | ✅ Required | MySQL server hostname | Localhost or your DB server |
+| `DB_PORT` | ✅ Required | MySQL port (default: 3306) | 3307 for some local setups |
+| `DB_USER` | ✅ Required | MySQL username | `root` or your DB user |
+| `DB_PASSWORD` | ✅ Required | MySQL password | Your DB password |
+| `DB_NAME` | ✅ Required | Database name | `hyperlocal_db` |
+| `JWT_SECRET` | ✅ Required | Secret key for JWT tokens | Generate: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` |
+| `GOOGLE_MAPS_API_KEY` | ✅ Required | Google Maps API key | [Google Cloud Console](https://console.cloud.google.com/) |
+| `CLOUDINARY_CLOUD_NAME` | ✅ Required | Cloudinary cloud name | [Cloudinary Dashboard](https://cloudinary.com/console) |
+| `CLOUDINARY_API_KEY` | ✅ Required | Cloudinary API key | [Cloudinary Dashboard](https://cloudinary.com/console) |
+| `CLOUDINARY_API_SECRET` | ✅ Required | Cloudinary API secret | [Cloudinary Dashboard](https://cloudinary.com/console) |
+| `SMTP_USER` | ✅ Required | Gmail email address | Your Gmail address |
+| `SMTP_PASS` | ✅ Required | Gmail app password | [Gmail App Passwords](https://myaccount.google.com/apppasswords) |
+| `FRONTEND_URL` | Optional | Frontend URL for email links | `http://localhost:3000` for dev |
+
+### Frontend Environment Variables (`client/.env.local`)
+
+| Variable | Required | Purpose | Example |
+|----------|----------|---------|---------|
+| `REACT_APP_API_URL` | Optional | Backend API URL (default: http://localhost:5000/api) | `http://localhost:5000/api` |
+| `REACT_APP_GOOGLE_MAPS_API_KEY` | Optional | Google Maps API key for frontend | Same as backend key |
+
+### How to Set Up Environment Variables
+
+#### Step 1: Generate JWT Secret
+```bash
+# Run this command in terminal to generate a strong JWT secret
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
+
+#### Step 2: Get Google Maps API Key
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project
+3. Enable these APIs:
+   - Geocoding API
+   - Places API
+   - Maps JavaScript API
+   - Distance Matrix API
+4. Create an API key (Credentials → Create Credentials → API Key)
+5. Restrict key to HTTP referrers (recommended)
+
+#### Step 3: Set Up Gmail for Email Service
+1. Go to [Gmail App Passwords](https://myaccount.google.com/apppasswords)
+2. Select Mail & App Password
+3. Generate an app-specific password
+4. Use this password as `SMTP_PASS` (not your actual Gmail password)
+
+#### Step 4: Set Up Cloudinary
+1. Create account at [Cloudinary](https://cloudinary.com/)
+2. Go to [Cloudinary Dashboard](https://cloudinary.com/console)
+3. Copy your:
+   - Cloud Name
+   - API Key
+   - API Secret
+
+#### Step 5: Create Database
+1. Create MySQL database: `hyperlocal_db`
+2. Run schema file:
+   ```bash
+   mysql -u root -p hyperlocal_db < schema.sql
+   ```
+
+### Validation
+The application will **automatically validate** all required environment variables when you start the server. If any critical variable is missing, the server will fail with a clear error message showing which variables need to be configured.
+
+## �📍 Hyperlocal Feature: How It Works
 
 ### Customer Registration/Login
 1. Customer enters their delivery address

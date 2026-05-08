@@ -6,17 +6,7 @@ import { Sidebar } from '../components/Sidebar';
 import { adminAPI } from '../api/endpoints';
 import { motion } from 'framer-motion';
 import { Users, Store, ShoppingBag, DollarSign, Activity, Settings, FileText } from 'lucide-react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-
-const mockChartData = [
-  { name: 'Mon', revenue: 4000, orders: 240 },
-  { name: 'Tue', revenue: 3000, orders: 139 },
-  { name: 'Wed', revenue: 2000, orders: 980 },
-  { name: 'Thu', revenue: 2780, orders: 390 },
-  { name: 'Fri', revenue: 1890, orders: 480 },
-  { name: 'Sat', revenue: 2390, orders: 380 },
-  { name: 'Sun', revenue: 3490, orders: 430 },
-];
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -88,10 +78,10 @@ const AdminDashboard = () => {
           {/* Stats Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             {[
-              { label: 'Total Revenue', value: `₹${stats.totalRevenue || '45,231'}`, icon: DollarSign, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
-              { label: 'Active Orders', value: stats.totalOrders || '1,204', icon: ShoppingBag, color: 'text-primary', bg: 'bg-primary/10' },
-              { label: 'Registered Vendors', value: stats.totalVendors || '84', icon: Store, color: 'text-blue-500', bg: 'bg-blue-500/10' },
-              { label: 'Total Customers', value: stats.totalCustomers || '2,492', icon: Users, color: 'text-purple-500', bg: 'bg-purple-500/10' },
+              { label: 'Total Revenue', value: `₹${stats.totalRevenue || 0}`, icon: DollarSign, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
+              { label: 'Active Orders', value: stats.totalOrders || 0, icon: ShoppingBag, color: 'text-primary', bg: 'bg-primary/10' },
+              { label: 'Registered Vendors', value: stats.totalVendors || 0, icon: Store, color: 'text-blue-500', bg: 'bg-blue-500/10' },
+              { label: 'Total Customers', value: stats.totalCustomers || 0, icon: Users, color: 'text-purple-500', bg: 'bg-purple-500/10' },
             ].map((stat, idx) => (
               <motion.div
                 key={stat.label}
@@ -117,25 +107,25 @@ const AdminDashboard = () => {
           <div className="grid lg:grid-cols-3 gap-8 mb-8">
             {/* Revenue Chart */}
             <Card className="lg:col-span-2 p-6">
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6">Revenue Analytics</h3>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6">Orders by Status</h3>
               <div className="h-[300px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={mockChartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#ff6b35" stopOpacity={0.3}/>
-                        <stop offset="95%" stopColor="#ff6b35" stopOpacity={0}/>
-                      </linearGradient>
-                    </defs>
+                  <BarChart
+                    data={(stats.ordersByStatus || []).map((item) => ({
+                      name: item.order_status.replaceAll('_', ' '),
+                      count: Number(item.count || 0),
+                    }))}
+                    margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+                  >
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                     <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748b'}} />
                     <YAxis axisLine={false} tickLine={false} tick={{fill: '#64748b'}} />
                     <Tooltip 
                       contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}
-                      labelStyle={{ fontWeight: 'bold', color: '#0f172a' }}
+                      formatter={(value) => [value, 'Orders']}
                     />
-                    <Area type="monotone" dataKey="revenue" stroke="#ff6b35" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" />
-                  </AreaChart>
+                    <Bar dataKey="count" fill="#ff6b35" radius={[8, 8, 0, 0]} />
+                  </BarChart>
                 </ResponsiveContainer>
               </div>
             </Card>
@@ -145,7 +135,7 @@ const AdminDashboard = () => {
               <Card className="p-6 bg-gradient-to-br from-primary to-orange-500 text-white border-none shadow-glow">
                 <h3 className="text-lg font-bold mb-2">Pending Vendor Approvals</h3>
                 <div className="flex items-end justify-between">
-                  <p className="text-4xl font-black">{stats.pendingApprovals || 3}</p>
+                  <p className="text-4xl font-black">{stats.pendingApprovals || 0}</p>
                   <Button variant="outline" className="border-white text-white hover:bg-white hover:text-primary transition-colors text-xs py-1.5 px-3">
                     Review Now
                   </Button>
@@ -200,9 +190,18 @@ const AdminDashboard = () => {
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                     {vendors.slice(0, 5).map((vendor) => (
                       <tr key={vendor.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
-                        <td className="px-6 py-4 font-medium text-slate-900 dark:text-white">{vendor.shop_name}</td>
-                        <td className="px-6 py-4 text-slate-600 dark:text-slate-300">{vendor.user?.name || vendor.owner_name || 'Unknown'}</td>
-                        <td className="px-6 py-4 text-slate-600 dark:text-slate-300">{vendor.city}</td>
+                        <td className="px-6 py-4">
+                          <p className="font-medium text-slate-900 dark:text-white">{vendor.shop_name}</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">{vendor.category || 'No category'}{vendor.phone ? ` • ${vendor.phone}` : ''}</p>
+                        </td>
+                        <td className="px-6 py-4 text-slate-600 dark:text-slate-300">
+                          <p>{vendor.user?.name || vendor.owner_name || 'Unknown'}</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">{vendor.user?.email || ''}</p>
+                        </td>
+                        <td className="px-6 py-4 text-slate-600 dark:text-slate-300">
+                          <p>{vendor.city}</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">{vendor.address}</p>
+                        </td>
                         <td className="px-6 py-4">
                           <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium capitalize ${
                             vendor.approval_status === 'approved'

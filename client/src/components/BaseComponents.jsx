@@ -125,7 +125,7 @@ export const Header = () => {
                           My Profile
                         </Link>
                         <Link
-                          to={`/${user.role === 'customer' ? '' : user.role}/dashboard`}
+                          to={user.role === 'customer' ? '/dashboard' : `/${user.role}/dashboard`}
                           onClick={() => setDropdownOpen(false)}
                           className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition"
                         >

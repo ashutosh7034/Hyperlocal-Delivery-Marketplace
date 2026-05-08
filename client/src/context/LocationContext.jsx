@@ -5,11 +5,11 @@ export const LocationContext = createContext();
 
 export const LocationProvider = ({ children }) => {
   const [customerLocation, setCustomerLocation] = useState({
-    lat: null,
-    lng: null,
-    address: null,
-    city: null,
-    pinCode: null,
+    lat: 19.0760,
+    lng: 72.8777,
+    address: 'Mumbai, Maharashtra',
+    city: 'Mumbai',
+    pinCode: '400001',
     loadingLocation: false,
     error: null,
   });

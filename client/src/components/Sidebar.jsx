@@ -2,13 +2,11 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { cn } from './BaseComponents';
-import { Home, Users, Package, ShoppingBag, Settings, LogOut, ChevronRight, Activity, TrendingUp } from 'lucide-react';
+import { LogOut, ChevronRight } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
-import { useTheme } from '../context/ThemeContext';
 
 export const Sidebar = ({ links, title = "Dashboard" }) => {
   const { logout, user } = useAuth();
-  const { theme } = useTheme();
 
   return (
     <div className="w-64 flex-shrink-0 hidden lg:flex flex-col h-[calc(100vh-5rem)] sticky top-20 border-r border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-dark-bg p-4 overflow-y-auto hide-scrollbar">

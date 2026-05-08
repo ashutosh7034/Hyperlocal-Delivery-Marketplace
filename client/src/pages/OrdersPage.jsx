@@ -4,7 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 import { Card, Button, LoadingSpinner, ErrorAlert } from '../components/BaseComponents';
 import { customerAPI } from '../api/endpoints';
 import { motion } from 'framer-motion';
-import { ShoppingBag, Package, Truck, CheckCircle, Clock, ChevronRight, Store, MapPin } from 'lucide-react';
+import { ShoppingBag, Package, Truck, CheckCircle, Clock, Store, MapPin } from 'lucide-react';
 
 const OrdersPage = () => {
   const navigate = useNavigate();
@@ -22,32 +22,7 @@ const OrdersPage = () => {
     const fetchOrders = async () => {
       try {
         const response = await customerAPI.getOrders();
-        // Add mock data if empty for demo purposes
-        const data = response.data.data || [];
-        if (data.length === 0) {
-          setOrders([
-            {
-              id: '1',
-              order_number: 'ORD-2026-001',
-              total_amount: 850,
-              order_status: 'out_for_delivery',
-              created_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-              vendor: { shop_name: 'Fresh Mart Grocery' },
-              items: [{ id: 1, quantity: 2, subtotal: 500, product: { name: 'Organic Milk' } }, { id: 2, quantity: 1, subtotal: 350, product: { name: 'Whole Wheat Bread' } }]
-            },
-            {
-              id: '2',
-              order_number: 'ORD-2026-002',
-              total_amount: 1200,
-              order_status: 'delivered',
-              created_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(),
-              vendor: { shop_name: 'Spice Route Restaurant' },
-              items: [{ id: 3, quantity: 1, subtotal: 1200, product: { name: 'Family Combo Meal' } }]
-            }
-          ]);
-        } else {
-          setOrders(data);
-        }
+        setOrders(response.data.data || []);
       } catch (ordersError) {
         setError(ordersError.response?.data?.message || 'Unable to load orders.');
       } finally {

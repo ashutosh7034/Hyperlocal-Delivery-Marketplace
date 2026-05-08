@@ -1,22 +1,42 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { Card, Button, LoadingSpinner } from '../components/BaseComponents';
 import { Sidebar } from '../components/Sidebar';
 import { customerAPI, productAPI } from '../api/endpoints';
 import { motion } from 'framer-motion';
-import { ShoppingBag, MapPin, Heart, Clock, Activity, Store, Settings, TrendingUp, Search, Bell } from 'lucide-react';
+import { ShoppingBag, MapPin, Heart, Activity, Store, Settings, TrendingUp, Search, Bell } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-const mockChartData = [
-  { name: 'Jan', spent: 1200 },
-  { name: 'Feb', spent: 2100 },
-  { name: 'Mar', spent: 800 },
-  { name: 'Apr', spent: 1600 },
-  { name: 'May', spent: 900 },
-  { name: 'Jun', spent: 2400 },
-  { name: 'Jul', spent: 3200 },
-];
+const buildSpendingTrend = (orders) => {
+  const points = [];
+
+  for (let offset = 5; offset >= 0; offset -= 1) {
+    const date = new Date();
+    date.setMonth(date.getMonth() - offset);
+    points.push({
+      key: `${date.getFullYear()}-${date.getMonth()}`,
+      name: date.toLocaleDateString(undefined, { month: 'short' }),
+      spent: 0,
+    });
+  }
+
+  orders.forEach((order) => {
+    const date = new Date(order.createdAt || order.created_at);
+    if (Number.isNaN(date.getTime())) {
+      return;
+    }
+
+    const key = `${date.getFullYear()}-${date.getMonth()}`;
+    const point = points.find((entry) => entry.key === key);
+
+    if (point) {
+      point.spent += Number(order.total_amount || 0);
+    }
+  });
+
+  return points.map(({ name, spent }) => ({ name, spent }));
+};
 
 const CustomerDashboard = () => {
   const navigate = useNavigate();
@@ -24,6 +44,7 @@ const CustomerDashboard = () => {
   const [profile, setProfile] = useState(null);
   const [recentOrders, setRecentOrders] = useState([]);
   const [nearbyVendors, setNearbyVendors] = useState([]);
+  const [savedAddressesCount, setSavedAddressesCount] = useState(0);
   const [stats, setStats] = useState({
     totalOrders: 0,
     totalSpent: 0,
@@ -44,18 +65,22 @@ const CustomerDashboard = () => {
         setProfile(profileRes.data.data);
 
         const ordersRes = await customerAPI.getOrders();
-        setRecentOrders((ordersRes.data.data || []).slice(0, 5));
+        const orders = ordersRes.data.data || [];
+        setRecentOrders(orders.slice(0, 5));
+
+        const addressesRes = await customerAPI.getAddresses();
+        const addresses = addressesRes.data.data || [];
+        setSavedAddressesCount(addresses.length);
 
         const vendorsRes = await productAPI.getNearbyVendors();
         setNearbyVendors((vendorsRes.data.data || []).slice(0, 6));
 
-        const orders = ordersRes.data.data || [];
         setStats((prev) => ({
           ...prev,
           totalOrders: orders.length,
           totalSpent: orders.reduce((sum, order) => sum + Number(order.total_amount || 0), 0),
-          savedAddresses: 1,
-          favoriteVendors: 3,
+          savedAddresses: addresses.length,
+          favoriteVendors: new Set(orders.map((order) => order.vendor_id || order.vendor?.id).filter(Boolean)).size,
         }));
       } catch (error) {
         console.error('Failed to fetch customer data:', error);
@@ -67,9 +92,11 @@ const CustomerDashboard = () => {
     fetchData();
   }, [isAuthenticated, user, navigate]);
 
+  const spendingChartData = useMemo(() => buildSpendingTrend(recentOrders), [recentOrders]);
+
   const sidebarLinks = [
     { name: 'Dashboard', path: '/customer/dashboard', icon: Activity },
-    { name: 'Orders', path: '/customer/orders', icon: ShoppingBag },
+    { name: 'Orders', path: '/orders', icon: ShoppingBag },
     { name: 'Favorite Stores', path: '#', icon: Heart },
     { name: 'Saved Addresses', path: '#', icon: MapPin },
     { name: 'Settings', path: '#', icon: Settings },
@@ -101,7 +128,7 @@ const CustomerDashboard = () => {
               { label: 'Total Orders', value: stats.totalOrders || '0', icon: ShoppingBag, color: 'text-primary', bg: 'bg-primary/10' },
               { label: 'Total Spent', value: `₹${stats.totalSpent || '0'}`, icon: TrendingUp, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
               { label: 'Favorite Stores', value: stats.favoriteVendors || '0', icon: Heart, color: 'text-rose-500', bg: 'bg-rose-500/10' },
-              { label: 'Saved Addresses', value: stats.savedAddresses || '0', icon: MapPin, color: 'text-blue-500', bg: 'bg-blue-500/10' },
+              { label: 'Saved Addresses', value: savedAddressesCount || stats.savedAddresses || '0', icon: MapPin, color: 'text-blue-500', bg: 'bg-blue-500/10' },
             ].map((stat, idx) => (
               <motion.div
                 key={stat.label}
@@ -134,7 +161,7 @@ const CustomerDashboard = () => {
                 </div>
                 <div className="h-[250px] w-full">
                   <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={mockChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <AreaChart data={spendingChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                       <defs>
                         <linearGradient id="colorSpent" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
@@ -158,7 +185,7 @@ const CustomerDashboard = () => {
               <Card className="p-0 overflow-hidden">
                 <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
                   <h2 className="text-lg font-bold text-slate-900 dark:text-white">Recent Orders</h2>
-                  <Button onClick={() => navigate('/customer/orders')} variant="ghost" size="sm">View All</Button>
+                  <Button onClick={() => navigate('/orders')} variant="ghost" size="sm">View All</Button>
                 </div>
 
                 {recentOrders.length > 0 ? (

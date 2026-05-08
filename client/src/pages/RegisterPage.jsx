@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { authAPI } from '../api/endpoints';
 import { Button, ErrorAlert, Input } from '../components/BaseComponents';
+import SocialLogin from '../components/SocialLogin';
 import { motion } from 'framer-motion';
 import { Mail, Lock, User, ArrowRight, Home, Store } from 'lucide-react';
 import clsx from 'clsx';
@@ -41,7 +42,14 @@ const RegisterPage = () => {
       });
       const { token, user } = loginResponse.data.data;
       login(token, user);
-      navigate('/', { replace: true });
+      const dashboardPath =
+        user.role === 'admin'
+          ? '/admin/dashboard'
+          : user.role === 'vendor'
+          ? '/vendor/dashboard'
+          : '/customer/dashboard';
+
+      navigate(dashboardPath, { replace: true });
     } catch (registerError) {
       const message = registerError.response?.data?.message || 'Unable to register right now.';
       setError(message);
@@ -147,6 +155,8 @@ const RegisterPage = () => {
                 {!loading && <ArrowRight size={18} className="ml-2" />}
               </Button>
             </form>
+
+            <SocialLogin onError={setError} />
 
             <p className="mt-8 text-center text-sm text-slate-600 dark:text-slate-400">
               Already have an account?{' '}
